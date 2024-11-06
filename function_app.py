@@ -1,6 +1,7 @@
 import logging,datetime,sys, os
 import azure.functions as func
-from crews.content_generation_crew import execute_content_generation_crew
+from utils.utils import save_input_as_md
+from crews.content_generation.main import main as execute_content_generation_crew
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -17,6 +18,8 @@ def post_automation_trigger(myTimer: func.TimerRequest) -> None:
     }
 
     result = execute_content_generation_crew(inputs)
+
+    save_input_as_md(result.raw, f"content_{datetime.datetime.now().year}_{datetime.datetime.now().month}.md")
 
     logging.info('Python timer trigger function executed.')
 

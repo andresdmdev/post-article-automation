@@ -5,7 +5,7 @@ from crewai_tools import SerperDevTool, ScrapeWebsiteTool
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from utils.utils import get_openai_api_key, get_serper_api_key
+from utils.utils import load_openai_api_config, load_serper_api_config
 
 @CrewBase
 class ContentGenerationCrew():
@@ -18,12 +18,42 @@ class ContentGenerationCrew():
       verbose=True,
       tools=[SerperDevTool(), ScrapeWebsiteTool()]
     )
+  
+  @agent
+  def writer(self) -> Agent:
+    return Agent(
+      config=self.agents_config['writer'],
+      verbose=True,
+      tools=[SerperDevTool(), ScrapeWebsiteTool()] 
+    )
+
+  @agent
+  def editor(self) -> Agent:
+    return Agent(
+      config=self.agents_config['editor'],
+      verbose=True,
+      tools=[SerperDevTool(), ScrapeWebsiteTool()]
+    )
 
   @task
   def researcher_task(self) -> Task:
     return Task(
       config=self.tasks_config['researcher_task'],
-      output_file='./report.md'
+    )
+
+  @task
+  def writer_task(self) -> Task:
+    return Task(
+      config=self.tasks_config['writer_task'],
+      context=[self.researcher_task()]
+    )
+  
+  @task
+  def editor_task(self) -> Task:
+    return Task(
+      config=self.tasks_config['editor_task'],
+      context=[self.researcher_task(), self.writer_task()],
+      output_file="result.md"
     )
 
   @crew
@@ -37,9 +67,8 @@ class ContentGenerationCrew():
     )
   
 
-def execute_content_generation_crew(input: dict[str, str]) -> str:
-  openai_api_key = get_openai_api_key()
-  os.environ['OPENAI_MODEL_NAME'] = 'gpt-4o-mini'
-  os.environ["SERPER_API_KEY"] = get_serper_api_key()
+def main(input: dict[str, str]) -> object:
+  load_openai_api_config()
+  load_serper_api_config()
   crew = ContentGenerationCrew()
   return crew.content_generation_crew().kickoff(inputs=input)
