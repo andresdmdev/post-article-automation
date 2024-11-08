@@ -1,4 +1,4 @@
-import os
+import os, json
 from dotenv import load_dotenv, find_dotenv
 
 def load_env():
@@ -43,3 +43,8 @@ def save_input_as_md(input_text, filename):
         file.write(input_text)
     
     print(f"Save file {file_path}")
+
+def get_topic_sets() -> list[str]:
+    load_env()
+    topics = os.getenv("DEFAULT_TOPICS")
+    return json.loads(topics)

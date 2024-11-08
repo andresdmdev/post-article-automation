@@ -5,6 +5,7 @@ from crewai_tools import SerperDevTool, ScrapeWebsiteTool
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+from PostAutomation.crews.models.generate_content import Generate_Content
 from utils.utils import load_openai_api_config, load_serper_api_config
 
 @CrewBase
@@ -53,7 +54,8 @@ class ContentGenerationCrew():
     return Task(
       config=self.tasks_config['editor_task'],
       context=[self.researcher_task(), self.writer_task()],
-      output_file="result.md"
+      output_json=Generate_Content,
+      output_file=f"{os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'markdown', 'content_generation_result.json'))}"
     )
 
   @crew
