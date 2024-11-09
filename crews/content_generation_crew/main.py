@@ -60,7 +60,6 @@ class ContentGenerationCrew():
 
   @crew
   def content_generation_crew(self) -> Crew:
-    """ Crew for generating content using AI models """
     return Crew(
       agents=self.agents,
       tasks=self.tasks,
