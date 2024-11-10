@@ -2,7 +2,7 @@ import datetime, random, logging as log, json, os
 from crewai.flow.flow import Flow, start, listen
 from pydantic import BaseModel
 from utils.utils import get_topic_sets
-from crews.content_generation.main import main as execute_content_generation_crew
+from crews.content_generation_crew.main import main as execute_content_generation_crew
 
 class ContentGenerator(BaseModel):
     topic: str = "Adquicision de clientes para una fintech"
@@ -51,7 +51,7 @@ class ContentGenerationFlow(Flow[ContentGenerator]):
         # Save content in database
         try:
             """ Save content in database | Data in content_generation_result.json"""
-            file_name = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'crews', 'markdown', 'content_generation_result.json'))
+            file_name = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'crews', 'data_generated', 'content_generation_result.json'))
             print(file_name)
             with open(file_name, 'r', encoding='utf-8') as f:
                 data = json.load(f)

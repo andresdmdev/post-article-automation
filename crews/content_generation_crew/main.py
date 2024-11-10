@@ -55,7 +55,7 @@ class ContentGenerationCrew():
       config=self.tasks_config['editor_task'],
       context=[self.researcher_task(), self.writer_task()],
       output_json=Generate_Content,
-      output_file=f"{os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'markdown', 'content_generation_result.json'))}"
+      output_file=f"{os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data_generated', 'content_generation_result.json'))}"
     )
 
   @crew
