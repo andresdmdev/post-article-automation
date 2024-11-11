@@ -5,7 +5,7 @@ from crewai_tools import SerperDevTool, ScrapeWebsiteTool
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from PostAutomation.crews.models.generate_content import Generate_Content
+from crews.models.generate_content import Generate_Content
 from utils.utils import load_openai_api_config, load_serper_api_config
 
 @CrewBase
@@ -55,7 +55,7 @@ class ContentGenerationCrew():
       config=self.tasks_config['editor_task'],
       context=[self.researcher_task(), self.writer_task()],
       output_json=Generate_Content,
-      output_file=f"{os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data_generated', 'content_generation_result.json'))}"
+      output_file=f"{os.path.join('post-article-automation', 'crews', 'data_generated', 'content_generation_result.json')}"
     )
 
   @crew

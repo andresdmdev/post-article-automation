@@ -47,4 +47,8 @@ def save_input_as_md(input_text, filename):
 def get_topic_sets() -> list[str]:
     load_env()
     topics = os.getenv("DEFAULT_TOPICS")
+    
+    if topics == "":
+        return ""
+    
     return json.loads(topics)
