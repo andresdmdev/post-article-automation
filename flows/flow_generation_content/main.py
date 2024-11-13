@@ -4,6 +4,7 @@ from crewai.flow.flow import Flow, start, listen
 from pydantic import BaseModel
 from utils.utils import get_topic_sets
 from crews.content_generation_crew.main import main as execute_content_generation_crew
+from database.databaserepository import PostDatabaseRepository
 
 class ContentGenerator(BaseModel):
     topic: str = "Adquicision de clientes para una fintech"
@@ -56,31 +57,8 @@ class ContentGenerationFlow(Flow[ContentGenerator]):
 
             with open(file_name, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-                url = os.getenv("TURSO_DATABASE_URL")
-                auth_token = os.getenv("TURSO_AUTH_TOKEN")
-
-                conn = libsql.connect("postautomation.db", sync_url=url, auth_token=auth_token)
-
-                topic = str(data.get('topic', 'Default')).replace("--", " ").replace("'", "''")
-                content = str(data.get('result_content', 'Prueba')).replace("--", " ").replace("'", "''")
-                conn.execute("""
-                    CREATE TABLE IF NOT EXISTS posts (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        topic VARCHAR(255) NOT NULL,
-                        content TEXT NOT NULL,
-                        createdDate TIMESTAMP NOT NULL,
-                        createdBy VARCHAR(100),
-                        updatedDate TIMESTAMP,
-                        updatedBy VARCHAR(100) NULL,
-                        deletedDate TIMESTAMP NULL,
-                        deletedBy VARCHAR(100) NULL
-                    );
-                """)
-                conn.execute(f"INSERT INTO posts (topic, content, createdDate, createdBy, updatedDate, updatedBy, deletedDate, deletedBy) VALUES ('{topic}', '{content}', '{str(datetime.datetime.now())}', 'test', null, null, null, null);")
-                conn.commit()
-                conn.sync()
-
-                print(conn.execute("select * from posts").fetchall())
+                post_repository = PostDatabaseRepository()
+                post_repository.save_content_in_db(data)
 
 
         except Exception as e:
