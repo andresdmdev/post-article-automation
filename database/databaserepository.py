@@ -2,29 +2,29 @@ import logging as log, datetime
 from database.databaseconnection import DatabaseConnection 
 
 class PostDatabaseRepository():
-  def _clean_data(data: str) -> str:
+  def _clean_data(self, data: str) -> str:
     return str(data).replace("--", " ").replace("'", "''")
 
-  def save_content_in_db(self, data: dict):
-    log.info("PostDatabaseRepository | save_content_in_db | Start")
+  def save_content(self, data: dict):
+    log.info("PostDatabaseRepository | save_content | Start")
     try:
       db = DatabaseConnection()
       db_connection = db.connect()
 
       if db_connection is None:
-          log.error("PostDatabaseRepository | save_content_in_db | Database connection failed")
+          log.error("PostDatabaseRepository | save_content | Database connection failed")
           return
 
       cursor = db_connection.cursor()
 
       for key, value in data.items():
-        data[key] = PostDatabaseRepository._clean_data(value)
+        data[key] = self._clean_data(value)
 
-      topic = data.get('topic', 'Content not found')
+      topic = data.get('topic', 'Content not found').upper()
       content = data.get('result_content', 'Content not found')
-      twitterContent = data.get('twitterContent', None)
-      notionContent = data.get('notionContent', None)
-      whatsappContent = data.get('whatsappContent', None)
+      twitterContent = data.get('twitterContent', '')
+      notionContent = data.get('notionContent', '')
+      whatsappContent = data.get('whatsappContent', '')
       created_at = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
       created_by = "system-admin"
 
@@ -32,46 +32,37 @@ class PostDatabaseRepository():
           INSERT INTO posts (topic, content, twitterContent, notionContent, whatsappContent, createdDate, createdBy)
           VALUES (?, ?, ?, ?, ?, ?, ?)
       """
-      params = (f"{topic}", f"{content}", f"{twitterContent}", f"{notionContent}", f"{whatsappContent}", f"{created_at}", f"{created_by}")
-      cursor.execute(query, params)
+      cursor.execute(query, (topic, content, twitterContent, notionContent, whatsappContent, created_at, created_by,))
 
       db_connection.commit()
       db_connection.sync()
       cursor.close()
 
-      log.info("PostDatabaseRepository | save_content_in_db | Content saved in database")
+      log.info("PostDatabaseRepository | save_content | Content saved in database")
     except Exception as e:
-      log.error(f"PostDatabaseRepository | save_content_in_db | Error saving content in database: {e}")
+      log.error(f"PostDatabaseRepository | save_content | Error saving content in database: {e}")
     finally:
-      log.info("PostDatabaseRepository | save_content_in_db | Finish")
+      log.info("PostDatabaseRepository | save_content | Finish")
 
     return 
     
-  def update_content_in_db(self, id: int, data: dict):
-    log.info("PostDatabaseRepository | update_content_in_db | Start")
+  def update_content(self, id: int, data: dict):
+    log.info("PostDatabaseRepository | update_content | Start")
 
     try:
       db = DatabaseConnection()
       db_connection = db.connect()
 
       if db_connection is None:
-          log.error("PostDatabaseRepository | update_content_in_db | Database connection failed")
+          log.error("PostDatabaseRepository | update_content | Database connection failed")
           return
 
       cursor = db_connection.cursor()
 
-      ## Search content by id
-      query_search = """
-        SELECT * FROM posts WHERE ID = :id LIMIT 1
-      """
-      search_params = {'id': id}
-      cursor.execute(query_search, search_params)
-
-      ## Get values
       params = {}
 
       for key, value in data.items():
-        data[key] = PostDatabaseRepository._clean_data(value)
+        data[key] = self._clean_data(value)
         params[key] = data.get(key, None)
 
       params['id'] = id
@@ -90,11 +81,50 @@ class PostDatabaseRepository():
       db_connection.sync()
       cursor.close()
 
-      log.info("PostDatabaseRepository | update_content_in_db | Content saved in database")
+      log.info("PostDatabaseRepository | update_content | Content saved in database")
     except Exception as e:
-      log.error(f"PostDatabaseRepository | update_content_in_db | Error saving content in database: {e}")
+      log.error(f"PostDatabaseRepository | update_content | Error saving content in database: {e}")
     finally:
-      log.info("PostDatabaseRepository | update_content_in_db | Finish")
+      log.info("PostDatabaseRepository | update_content | Finish")
 
-    return 
-    
+    return
+  
+  def was_topic_proccessed(self, topic: str) -> bool:
+    log.info("PostDatabaseRepository | wasContentProccessed | Start")
+    was_processed = False
+    try:
+      db = DatabaseConnection()
+      db_connection = db.connect()
+
+      if db_connection is None:
+          log.error("PostDatabaseRepository | wasContentProccessed | Database connection failed")
+          return
+
+      cursor = db_connection.cursor()
+
+      formated_topic = '%' + self._clean_data(topic).upper() + '%'
+
+      query = """
+          SELECT COUNT(*) FROM posts WHERE topic like ? and deletedBy IS NULL and deletedDate IS NULL ORDER BY ID DESC LIMIT 1
+      """
+      
+      result = cursor.execute(query, (formated_topic,)).fetchall()
+      print(result)
+
+      if result:
+        count, = result[0]
+
+        if count > 0:
+          was_processed = True
+
+      db_connection.commit()
+      db_connection.sync()
+      cursor.close()
+
+      log.info("PostDatabaseRepository | wasContentProccessed | Content saved in database")
+    except Exception as e:
+      log.error(f"PostDatabaseRepository | wasContentProccessed | Error saving content in database: {e}")
+    finally:
+      log.info("PostDatabaseRepository | wasContentProccessed | Finish")
+
+    return was_processed

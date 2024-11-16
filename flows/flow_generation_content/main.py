@@ -1,10 +1,12 @@
 import datetime, random, logging as log, json, os
 import libsql_experimental as libsql
-from crewai.flow.flow import Flow, start, listen
+from crewai.flow.flow import Flow, start, listen, router
 from pydantic import BaseModel
 from utils.utils import get_topic_sets
 from crews.content_generation_crew.main import main as execute_content_generation_crew
 from database.databaserepository import PostDatabaseRepository
+
+post_repository = PostDatabaseRepository()
 
 class ContentGenerator(BaseModel):
     topic: str = "Adquicision de clientes para una fintech"
@@ -14,7 +16,6 @@ class ContentGenerator(BaseModel):
     result_content: str = ""
 
 class ContentGenerationFlow(Flow[ContentGenerator]):
-
     @start()
     def generate_topic(self, input: str = ""):
         topic = input if len(input) > 0 else self.state.topic
@@ -26,10 +27,22 @@ class ContentGenerationFlow(Flow[ContentGenerator]):
         topic = random.choice(topic_sets)
 
         log.info(f"Generated topic: {topic}")
-
+        
         self.state.topic = topic
-      
-    @listen(generate_topic)
+
+    @router(generate_topic)
+    def check_if_topic_was_proccessed(self):
+        if post_repository.was_topic_proccessed(self.state.topic):
+            return "topic_already_proccessed"
+        else:
+            return "generate_content"
+
+    @listen("topic_already_proccessed")
+    def topic_already_proccessed(self):
+        log.info(f"Topic already proccessed | Topic: {self.state.topic}")
+        return
+    
+    @listen("generate_content")
     def generate_content(self):
         log.info("Generating content")
 
@@ -57,8 +70,7 @@ class ContentGenerationFlow(Flow[ContentGenerator]):
 
             with open(file_name, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-                post_repository = PostDatabaseRepository()
-                post_repository.save_content_in_db(data)
+                post_repository.save_content(data)
 
 
         except Exception as e:
