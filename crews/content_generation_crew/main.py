@@ -5,7 +5,7 @@ from crewai_tools import SerperDevTool, ScrapeWebsiteTool
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from crews.models.generate_content import Generate_Content
+from models.generate_content import Generate_Content
 from utils.utils import load_openai_api_config, load_serper_api_config
 
 @CrewBase

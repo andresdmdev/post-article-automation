@@ -1,32 +1,23 @@
-import datetime, random, logging as log, json, os
-import libsql_experimental as libsql
+import random, logging as log, json, os
 from crewai.flow.flow import Flow, start, listen, router
-from pydantic import BaseModel
 from utils.utils import get_topic_sets
 from crews.content_generation_crew.main import main as execute_content_generation_crew
 from database.databaserepository import PostDatabaseRepository
+from models.generate_content import Generate_Content
 
 post_repository = PostDatabaseRepository()
 
-class ContentGenerator(BaseModel):
-    topic: str = "Adquicision de clientes para una fintech"
-    year: int = datetime.datetime.now().year
-    month: int = datetime.datetime.now().month
-    day: int = datetime.datetime.now().day
-    result_content: str = ""
-
-class ContentGenerationFlow(Flow[ContentGenerator]):
+class content_generation_flow(Flow[Generate_Content]):
     @start()
     def generate_topic(self, input: str = ""):
-        topic = input if len(input) > 0 else self.state.topic
+
+        topic = input
+
+        if not input:
+            topic_sets = get_topic_sets()
+            topic = random.choice(topic_sets)
 
         log.info(f"Generating content for topic: {topic}")
-
-        topic_sets = get_topic_sets()
-
-        topic = random.choice(topic_sets)
-
-        log.info(f"Generated topic: {topic}")
         
         self.state.topic = topic
 
@@ -63,9 +54,7 @@ class ContentGenerationFlow(Flow[ContentGenerator]):
     def save_content_in_db(self):
         log.info("Saving content in database | Start")
 
-        # Save content in database
         try:
-            """ Save content in database | Data in content_generation_result.json"""
             file_name = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'crews', 'data_generated', 'content_generation_result.json'))
 
             with open(file_name, 'r', encoding='utf-8') as f:
@@ -80,7 +69,7 @@ class ContentGenerationFlow(Flow[ContentGenerator]):
             log.info("Finished attempting to save content in database")
 
 def execute_content_generation_flow() -> str:
-    flow = ContentGenerationFlow()
+    flow = content_generation_flow()
     flow.kickoff()
     retult = flow.state.result_content
 

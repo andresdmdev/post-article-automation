@@ -2,6 +2,7 @@ import logging,datetime,sys, os
 import azure.functions as func
 from utils.utils import save_input_as_md
 from flows.flow_generation_content.main import execute_content_generation_flow
+from flows.flow_social_network_content.main import execute_social_network_content_flow
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -12,6 +13,8 @@ app = func.FunctionApp()
 def post_automation_trigger(myTimer: func.TimerRequest) -> None:
 
     result = execute_content_generation_flow()
+
+    execute_social_network_content_flow()
 
     save_input_as_md(result, f"content_{datetime.datetime.now().year}_{datetime.datetime.now().month}.md")
 

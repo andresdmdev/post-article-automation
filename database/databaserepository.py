@@ -59,20 +59,23 @@ class PostDatabaseRepository():
 
       cursor = db_connection.cursor()
 
-      params = {}
-
+      params = ()
+      query_parameters = ""
+      
       for key, value in data.items():
         data[key] = self._clean_data(value)
-        params[key] = data.get(key, None)
+        params = params + (data.get(key, ""),)
+        query_parameters += f"{key} = ?, "
 
-      params['id'] = id
-      params['updatedBy'] = "system-admin"
-      params['updatedDate'] =  datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+      updatedDate =  datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+      updatedBy = "system-admin"
+      
+      params = params + (updatedDate, updatedBy, id, )
 
-      query = """
+      query = f"""
           UPDATE posts 
-          SET twitterContent = :twitterContent, notionContent = :notionContent, whatsappContent = :whatsappContent, updatedDate = :updatedDate, updatedBy = :updatedBy
-          WHERE ID = :id
+          SET {query_parameters} updatedDate = ?, updatedBy = ?
+          WHERE ID = ?
       """
       
       cursor.execute(query, params)
