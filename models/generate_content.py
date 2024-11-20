@@ -19,3 +19,7 @@ class Social_Network_Content(BaseModel):
   is_whatsapp_content_saved: bool = False
   discord_content: str = ""
   is_discord_content_saved: bool = False
+
+class Twitter_Content(BaseModel):
+  topic: str = ""
+  twitter_content: str = ""

@@ -46,7 +46,7 @@ class PostDatabaseRepository():
 
     return 
     
-  def update_content(self, id: int, data: dict):
+  def update_content(self, topic: str, data: dict):
     log.info("PostDatabaseRepository | update_content | Start")
 
     try:
@@ -58,6 +58,12 @@ class PostDatabaseRepository():
           return
 
       cursor = db_connection.cursor()
+
+      id = self.get_topic_id(topic)
+
+      if id == None or id == 0:
+        log.error("PostDatabaseRepository | update_content | Topic not found in database")
+        return
 
       params = ()
       query_parameters = ""
@@ -112,7 +118,6 @@ class PostDatabaseRepository():
       """
       
       result = cursor.execute(query, (formated_topic,)).fetchall()
-      print(result)
 
       if result:
         count, = result[0]
@@ -129,5 +134,42 @@ class PostDatabaseRepository():
       log.error(f"PostDatabaseRepository | wasContentProccessed | Error saving content in database: {e}")
     finally:
       log.info("PostDatabaseRepository | wasContentProccessed | Finish")
+
+    return was_processed
+  
+  def get_topic_id(self, topic: str) -> int:
+    log.info("PostDatabaseRepository | get_topic_id | Start")
+    was_processed = False
+    try:
+      db = DatabaseConnection()
+      db_connection = db.connect()
+
+      if db_connection is None:
+          log.error("PostDatabaseRepository | get_topic_id | Database connection failed")
+          return
+
+      cursor = db_connection.cursor()
+
+      formated_topic = '%' + self._clean_data(topic).upper() + '%'
+
+      query = """
+          SELECT ID FROM posts WHERE topic like ? and deletedBy IS NULL and deletedDate IS NULL ORDER BY ID DESC LIMIT 1
+      """
+      
+      result = cursor.execute(query, (formated_topic,)).fetchall()
+
+      if result:
+        count, = result[0]
+
+        return count
+
+      db_connection.commit()
+      db_connection.sync()
+      cursor.close()
+
+    except Exception as e:
+      log.error(f"PostDatabaseRepository | get_topic_id | Error saving content in database: {e}")
+    finally:
+      log.info("PostDatabaseRepository | get_topic_id | Finish")
 
     return was_processed
