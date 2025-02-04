@@ -141,14 +141,14 @@ class social_network_content_flow(Flow[Social_Network_Content]):
     finally:
       log.info("Finished attempting to save content in database")
 
-  @listen(and_(get_telegram_content)) ## get_twitter_content, get_notion_content, get_telegram_content
+  @listen(and_(get_twitter_content, get_notion_content, get_telegram_content, get_telegram_content))
   def save_social_media_content(self):
     log.info("Saving Social Media content")
 
     content = {
-      ## "twitterContent": self.twitter_content,
-      ## "notionContent": self.notion_content,
-      ## "linkedinContent": self.linkedin_content
+      "twitterContent": self.twitter_content,
+      "notionContent": self.notion_content,
+      "linkedinContent": self.linkedin_content,
       "telegramContent": self.telegram_content
     }
 
