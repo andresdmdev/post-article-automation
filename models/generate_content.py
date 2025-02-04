@@ -23,3 +23,15 @@ class Social_Network_Content(BaseModel):
 class Twitter_Content(BaseModel):
   topic: str = ""
   twitter_content: str = ""
+
+class Notion_Content(BaseModel):
+  topic: str = ""
+  notion_content: str = ""
+
+class Linkedin_Content(BaseModel):
+  topic: str = ""
+  linkedin_content: str = ""
+
+class Telegram_Content(BaseModel):
+  topic: str = ""
+  telegram_content: str = ""

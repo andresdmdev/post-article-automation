@@ -61,7 +61,6 @@ class content_generation_flow(Flow[Generate_Content]):
                 data = json.load(f)
                 post_repository.save_content(data)
 
-
         except Exception as e:
             log.error(f"Error saving content in database: {e}")
         

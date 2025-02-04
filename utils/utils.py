@@ -52,3 +52,10 @@ def get_topic_sets() -> list[str]:
         return ""
     
     return json.loads(topics)
+
+def get_bot_vars() -> dict[str, str]:
+    load_env()
+    return {
+        "CHAT_ID_TELEGRAM": os.getenv("CHAT_ID_TELEGRAM"),
+        "BOT_TOKEN_TELEGRAM": os.getenv("BOT_TOKEN_TELEGRAM")
+    }
