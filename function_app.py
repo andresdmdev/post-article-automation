@@ -9,7 +9,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 app = func.FunctionApp()
 
 @app.function_name(name="post_automation_trigger")
-@app.schedule(schedule="*/10 * * * *", arg_name="myTimer", run_on_startup=True, use_monitor=False)
+@app.schedule(schedule="0 0 1 * *", arg_name="myTimer", run_on_startup=True, use_monitor=False)
 def post_automation_trigger(myTimer: func.TimerRequest) -> None:
 
     result = execute_content_generation_flow()
