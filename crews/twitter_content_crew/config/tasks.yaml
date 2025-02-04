@@ -1,0 +1,19 @@
+writer_task:
+  description: >
+    1. Use the content plan to craft a compelling tweet on {topic}.
+    2. Ensure the tweet is structured with an engaging insightful information, clear and concise.
+    3.  Use emojis and hashtags to make it more engaging.
+    4. Proofread for grammatical errors and alignment with the brand's voice which is friendly vibe, clear info, and a dash of fun.
+  expected_output: >
+    A well-written tweet in markdown format, ready for publication, each 
+    section should have 2 or 3 paragraphs.
+  agent: writer
+
+editor_task:
+  description: >
+    Proofread the given tweet for grammatical errors and alignment with 
+    the brand's voice which is friendly vibe, clear info, and a dash of fun.
+  expected_output: >
+    A well-written tweet in markdown format, ready for publication, each 
+    section should have 2 or 3 paragraphs.
+  agent: editor

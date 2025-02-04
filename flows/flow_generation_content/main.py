@@ -1,33 +1,39 @@
-import datetime, random, logging as log, json, os
-from crewai.flow.flow import Flow, start, listen
-from pydantic import BaseModel
+import random, logging as log, json, os
+from crewai.flow.flow import Flow, start, listen, router
 from utils.utils import get_topic_sets
 from crews.content_generation_crew.main import main as execute_content_generation_crew
+from database.databaserepository import PostDatabaseRepository
+from models.generate_content import Generate_Content
 
-class ContentGenerator(BaseModel):
-    topic: str = "Adquicision de clientes para una fintech"
-    year: int = datetime.datetime.now().year
-    month: int = datetime.datetime.now().month
-    day: int = datetime.datetime.now().day
-    result_content: str = ""
+post_repository = PostDatabaseRepository()
 
-class ContentGenerationFlow(Flow[ContentGenerator]):
-
+class content_generation_flow(Flow[Generate_Content]):
     @start()
     def generate_topic(self, input: str = ""):
-        topic = input if len(input) > 0 else self.state.topic
 
-        log.info("Generating content for topic: ", topic)
+        topic = input
 
-        topic_sets = get_topic_sets()
+        if not input:
+            topic_sets = get_topic_sets()
+            topic = random.choice(topic_sets)
 
-        topic = random.choice(topic_sets)
-
-        log.info("Generated topic: ", topic)
-
+        log.info(f"Generating content for topic: {topic}")
+        
         self.state.topic = topic
-      
-    @listen(generate_topic)
+
+    @router(generate_topic)
+    def check_if_topic_was_proccessed(self):
+        if post_repository.was_topic_proccessed(self.state.topic):
+            return "topic_already_proccessed"
+        else:
+            return "generate_content"
+
+    @listen("topic_already_proccessed")
+    def topic_already_proccessed(self):
+        log.info(f"Topic already proccessed | Topic: {self.state.topic}")
+        return
+    
+    @listen("generate_content")
     def generate_content(self):
         log.info("Generating content")
 
@@ -48,24 +54,21 @@ class ContentGenerationFlow(Flow[ContentGenerator]):
     def save_content_in_db(self):
         log.info("Saving content in database | Start")
 
-        # Save content in database
         try:
-            """ Save content in database | Data in content_generation_result.json"""
             file_name = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'crews', 'data_generated', 'content_generation_result.json'))
-            print(file_name)
+
             with open(file_name, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-
-                print(data)
+                post_repository.save_content(data)
 
         except Exception as e:
-            log.error("Error saving content in database: ", e)
+            log.error(f"Error saving content in database: {e}")
         
         finally:
             log.info("Finished attempting to save content in database")
 
 def execute_content_generation_flow() -> str:
-    flow = ContentGenerationFlow()
+    flow = content_generation_flow()
     flow.kickoff()
     retult = flow.state.result_content
 

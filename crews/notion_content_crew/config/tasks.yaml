@@ -1,0 +1,19 @@
+writer_task:
+  description: >
+    1. Use the content plan to craft a compelling notion article on {topic}.
+    2. Ensure the notion article is structured with an engaging insightful information, clear and concise.
+    3. Be specific and explain the context if necessary.
+    4. Proofread for grammatical errors and alignment with the brand's voice which is friendly vibe, clear info, and a dash of fun.
+  expected_output: >
+    A well-written notion article in markdown format, ready for publication, each 
+    section should have 4 or 5 paragraphs.
+  agent: writer
+
+editor_task:
+  description: >
+    Proofread the given notion article for grammatical errors and alignment with 
+    the brand's voice which is friendly vibe, clear info, and a dash of fun.
+  expected_output: >
+    A well-written notion article in markdown format, ready for publication, each 
+    section should have 4 or 5 paragraphs.
+  agent: editor
