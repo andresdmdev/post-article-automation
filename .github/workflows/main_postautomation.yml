@@ -11,8 +11,8 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.'
-  PYTHON_VERSION: '3.11'
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' # set this to the path to your web app project, defaults to the repository root
+  PYTHON_VERSION: '3.11' # set this to the python version to use (supports 3.6, 3.7, 3.8)
 
 jobs:
   build:
@@ -26,64 +26,56 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Install dependencies
+      - name: Create and start virtual environment
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          python -m venv venv
+          source venv/bin/activate
+      - name: Install dependencies
+        run: pip install -r requirements.txt
 
-      - name: Clean Python Cache
+      - name: Clean Python Cache  # 🔥 Agregado aquí
         run: |
           find . -type d -name "__pycache__" -exec rm -r {} +
           rm -rf .pytest_cache
+      # Optional: Add step to run tests here
 
-      - name: Create deployment package
-        run: |
-          zip -r release.zip . -i '*.py' '*.json' '*.txt' 'host.json' 'requirements.txt'  # Estructura corregida
+      - name: Zip artifact for deployment
+        run: zip release.zip ./* -r
 
-      - name: Upload artifact
+      - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: python-app
-          path: release.zip
-
+          path: |
+            release.zip
+            !venv/
   deploy:
     runs-on: ubuntu-latest
     needs: build
     
     permissions:
-      id-token: write
+      id-token: write #This is required for requesting the JWT
 
     steps:
-      - name: Download artifact
+      - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
           name: python-app
 
-      - name: Unzip package
-        run: unzip release.zip -d deployment_package
-
+      - name: Unzip artifact for deployment
+        run: unzip release.zip     
+        
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_69CD2576A0494BA1A32A217E10BC8849 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_CD8A4FCEF41244B98875A88805B6F423 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_E6D0F7D127BC4EA68632FA98829D111F }}
 
-      - name: Deploy to Azure Functions
-        uses: Azure/functions-action@v2  # Versión actualizada
+      - name: 'Deploy to Azure Functions'
+        uses: Azure/functions-action@v1
         id: deploy-to-function
         with:
           app-name: 'postautomation'
           slot-name: 'Production'
-          package: 'deployment_package'
-          enable-oryx-build: true  # Build específico para Python
-          runtime: 'python'  # Runtime explícito
-          runtime-version: '3.11'  # Versión específica
-          publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
-
-      - name: Verify deployment
-        run: |
-          az functionapp config appsettings list \
-          --name postautomation \
-          --resource-group YOUR_RESOURCE_GROUP_NAME \
-          --query "[?name=='WEBSITE_RUN_FROM_PACKAGE'].value"
+          package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
