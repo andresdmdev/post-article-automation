@@ -65,18 +65,21 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_69CD2576A0494BA1A32A217E10BC8849 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_CD8A4FCEF41244B98875A88805B6F423 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_E6D0F7D127BC4EA68632FA98829D111F }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Deploy to Function App
-        uses: Azure/functions-action@v1.2.1  # ÚLTIMA VERSIÓN CONFIRMADA
+      - name: Deploy to Azure Functions
+        uses: Azure/functions-action@v2  # Versión actualizada
+        id: deploy-to-function
         with:
           app-name: 'postautomation'
-          package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
+          slot-name: 'Production'
+          package: 'deployment_package'
+          enable-oryx-build: true  # Build específico para Python
+          runtime: 'python'  # Runtime explícito
+          runtime-version: '3.11'  # Versión específica
           publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
-          enable-oryx-build: false  # Para Python no se necesita Oryx
-          respect-funcignore: true
 
       - name: Verify deployment
         run: |
